@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "hello-world",
+    "data-types",
+    "guessing_game",
+    "reading-files",
+    "grrs",
+]
