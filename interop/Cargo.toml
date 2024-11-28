@@ -1,0 +1,15 @@
+[package]
+name = "multiplier"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+[build-dependencies]
+cc = "1.2.1"
+bindgen = "0.70.1"
+
+[lib]
+name = "multiplier"
+crate-type = ["staticlib"]
