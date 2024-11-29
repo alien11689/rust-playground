@@ -1,8 +1,8 @@
-all:
+all: static
+
+static:
 	cd adder && make all && cd - 
-	cargo clean
-	cargo test
-	cargo build --release
-	rm -f demo
-	gcc -o demo main.c -L target/release -lmultiplier
-	./demo
+	cd multiplier-static && cargo clean && cargo test && cargo build --release
+	rm -f demo-static
+	gcc -o demo-static main.c -L multiplier-static/target/release -lmultiplier
+	./demo-static

@@ -3,7 +3,7 @@ use std::path::Path;
 
 fn main() {
     let bindings = bindgen::Builder::default()
-        .header("./adder/adder.h")
+        .header("../adder/adder.h")
         .generate()
         .expect("Unable to generate bindings");
 
@@ -12,7 +12,7 @@ fn main() {
         .expect("Couldn't write bindings!");
 
     // Linkowanie do statycznej biblioteki C
-    println!("cargo:rerun-if-changed=./adder/adder.h");
+    println!("cargo:rerun-if-changed=../adder/adder.h");
     println!("cargo:rustc-link-lib=static=adder");
-    println!("cargo:rustc-link-search=adder");
+    println!("cargo:rustc-link-search=../adder");
 }
