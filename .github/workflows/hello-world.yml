@@ -1,0 +1,29 @@
+name: Build hello-world
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/hello-world.yml'
+      - 'hello-world/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'hello-world'
+
+env:
+  # Disable incremental compilation for faster from-scratch builds
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo fmt --check
+    - run: cargo clippy
+    - run: cargo test
+    - run: cargo build --release

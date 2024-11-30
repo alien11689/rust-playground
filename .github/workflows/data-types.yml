@@ -1,17 +1,17 @@
-name: Build advent-of-code
+name: Build data-types
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/build-advent-of-code.yml'
-      - 'advent-of-code/**'
+      - '.github/workflows/data-types.yml'
+      - 'data-types/**'
   push:
     branches:
       - main
 
 defaults:
   run:
-    working-directory: 'advent-of-code'
+    working-directory: 'data-types'
 
 env:
   # Disable incremental compilation for faster from-scratch builds
@@ -25,4 +25,5 @@ jobs:
     - run: rustup update
     - run: cargo fmt --check
     - run: cargo clippy
+    - run: cargo test
     - run: cargo build --release
