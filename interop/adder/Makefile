@@ -1,3 +1,5 @@
+all: clean static dynamic
+
 adder.o:
 	gcc -c -Wall -Werror adder.c -o adder.o
 
@@ -10,4 +12,3 @@ dynamic: adder.o
 clean:
 	rm -f *.o *.so *.a *.gch
 
-all: clean static dynamic

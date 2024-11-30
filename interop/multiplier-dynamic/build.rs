@@ -14,5 +14,5 @@ fn main() {
     // Linkowanie do statycznej biblioteki C
     println!("cargo:rerun-if-changed=../adder/adder.h");
     println!("cargo:rustc-link-lib=dylib=adder");
-    println!("cargo:rustc-link-search=native=../adder");
+    println!("cargo:rustc-link-search=../adder");
 }
