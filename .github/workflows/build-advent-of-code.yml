@@ -1,0 +1,28 @@
+name: Build advent-of-code
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build-advent-of-code.yml'
+      - 'advent-of-code/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'advent-of-code'
+
+env:
+  # Disable incremental compilation for faster from-scratch builds
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo fmt --check
+    - run: cargo clippy
+    - run: cargo build --release
