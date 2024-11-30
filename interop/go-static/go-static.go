@@ -8,8 +8,8 @@ package main
 import "C"
 import "fmt"
 
-func main(){
-    res := C.multiply(10, -82)
-    fmt.Println("GO Static")
-    fmt.Println(res)
+func main() {
+	res := C.multiply(10, -82)
+	fmt.Println("GO Static")
+	fmt.Println(res)
 }
