@@ -1,5 +1,9 @@
-/target
+target
+Cargo.lock
+
 *.so
 *.a
 *.o
 interop/demo-*
+
+advent-of-code/resources
