@@ -74,10 +74,8 @@ fn solve_part2(lines: &[String]) -> u32 {
 pub fn main(path: &String) {
     let full_path = format!("{path}/resources/2023/03/input.txt");
     let lines = read_file_lines(&full_path);
-    println!("Day 03");
-    println!("Part 1");
+    println!("Day03");
     println!("{}", solve_part1(&lines));
-    println!("Part 2");
     println!("{}", solve_part2(&lines));
 }
 

@@ -92,10 +92,8 @@ fn solve_part2(lines: &Vec<String>) -> i32 {
 pub fn main(path: &String) {
     let full_path = format!("{path}/resources/2023/02/input.txt");
     let lines = read_file_lines(&full_path);
-    println!("Day 02");
-    println!("Part 1");
+    println!("Day02");
     println!("{}", solve_part1(&lines));
-    println!("Part 2");
     println!("{}", solve_part2(&lines));
 }
 
