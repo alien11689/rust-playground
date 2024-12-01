@@ -36,10 +36,8 @@ pub fn main(path: &String) {
     let full_path = format!("{path}/resources/2015/01/input.txt");
     let lines = read_file_lines(&full_path);
     let input = lines.first().unwrap();
-    println!("Day 01");
-    println!("Part 1");
+    println!("Day01");
     println!("{}", solve_part1(input));
-    println!("Part 2");
     println!("{}", solve_part2(input));
 }
 
