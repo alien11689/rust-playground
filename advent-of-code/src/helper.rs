@@ -24,6 +24,17 @@ pub struct Point2D {
 }
 
 impl Point2D {
+    pub fn new(x: i32, y: i32) -> Point2D {
+        Point2D { x, y }
+    }
+
+    pub(crate) fn mv(&self, dx: i32, dy: i32) -> Point2D {
+        Point2D {
+            x: self.x + dx,
+            y: self.y + dy,
+        }
+    }
+
     pub fn neighbours(&self) -> HashSet<Point2D> {
         let mut neighbours = HashSet::new();
         neighbours.insert(Point2D {
