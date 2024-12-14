@@ -1,9 +1,9 @@
-name: Build aoc-input-fetch
+name: Build aoc-private-leaderboard-fetch
 on:
   pull_request:
     paths:
-      - '.github/workflows/aoc-input-fetch.yml'
-      - 'aoc-input-fetch/**'
+      - '.github/workflows/aoc-private-leaderboard-fetch.yml'
+      - 'aoc-private-leaderboard-fetch/**'
       - 'aoc-common/**'
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 defaults:
   run:
-    working-directory: 'aoc-input-fetch'
+    working-directory: 'aoc-private-leaderboard-fetch'
 
 env:
   # Disable incremental compilation for faster from-scratch builds
