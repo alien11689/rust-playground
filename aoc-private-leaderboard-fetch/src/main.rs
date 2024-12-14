@@ -1,11 +1,9 @@
 use cookie::Cookie;
-use reqwest::Client;
 use reqwest::Error;
+use reqwest::{Client, Response};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-
-const SESSION_ID_FILE: &str = "~/.adventofcode";
 
 #[derive(serde::Deserialize, Debug)]
 struct LeaderBoard {
@@ -24,17 +22,11 @@ async fn main() -> Result<(), Error> {
     // TODO verify parameter count
     let user_id = &params[0];
 
-    let home_dir = home::home_dir().expect("No Home dir");
-    // println!("Home dir: {:?}", home_dir);
-    let expanded_path = home_dir.join(SESSION_ID_FILE.trim_start_matches("~/"));
-    // println!("Expanded path: {:?}", expanded_path);
-    let content = fs::read_to_string(expanded_path).expect("File should exist");
-    let content = content.trim();
-    // println!("{content}");
+    let token = read_advent_of_code_token().expect("Cannot read Advent of Code token");
 
     let client = Client::builder().cookie_store(true).build()?;
 
-    let cookie = Cookie::build(("session", content))
+    let cookie: Cookie<'_> = Cookie::build(("session", token))
         .domain("https://adventofcode.com/")
         .path("/")
         .build();
@@ -46,15 +38,8 @@ async fn main() -> Result<(), Error> {
         let file_exists = fs::exists(&filename).expect("Should be able to check file");
 
         if !file_exists {
-            let path =
-                format!("https://adventofcode.com/{year}/leaderboard/private/view/{user_id}.json");
-            let bytes = client
-                .get(path)
-                .header("Cookie", cookie.to_string())
-                .send()
-                .await?
-                .bytes()
-                .await?;
+            let response = request_leaderboard(&client, &cookie, year, user_id).await?;
+            let bytes = response.bytes().await?;
             fs::write(&filename, bytes).expect("Should be able to write to file");
         }
 
@@ -74,4 +59,28 @@ async fn main() -> Result<(), Error> {
         println!("{} has {} stars", user, stars);
     }
     Ok(())
+}
+
+async fn request_leaderboard(
+    client: &Client,
+    cookie: &Cookie<'_>,
+    year: i32,
+    user_id: &String,
+) -> Result<Response, Error> {
+    let path = format!("https://adventofcode.com/{year}/leaderboard/private/view/{user_id}.json");
+    let response = client
+        .get(path)
+        .header("Cookie", cookie.to_string())
+        .send()
+        .await?;
+    Ok(response)
+}
+
+fn read_advent_of_code_token() -> Result<String, std::io::Error> {
+    let home_dir = home::home_dir().expect("No Home dir");
+    // println!("Home dir: {:?}", home_dir);
+    let expanded_path = home_dir.join(".adventofcode");
+    println!("Expanded path: {:?}", expanded_path);
+    let content = fs::read_to_string(expanded_path)?;
+    Ok(content.trim().to_string())
 }
