@@ -1,17 +1,16 @@
-name: Build aoc-private-leaderboard-fetch
+name: Build aoc-bins
 on:
   pull_request:
     paths:
-      - '.github/workflows/aoc-private-leaderboard-fetch.yml'
-      - 'aoc-private-leaderboard-fetch/**'
-      - 'aoc-common/**'
+      - '.github/workflows/aoc-bins.yml'
+      - 'aoc-bins/**'
   push:
     branches:
       - main
 
 defaults:
   run:
-    working-directory: 'aoc-private-leaderboard-fetch'
+    working-directory: 'aoc-bins'
 
 env:
   # Disable incremental compilation for faster from-scratch builds

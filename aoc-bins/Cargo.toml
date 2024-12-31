@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "aoc-common",
+    "aoc-input-fetch",
+    "aoc-private-leaderboard-fetch",
+]
+
+resolver = "1"
