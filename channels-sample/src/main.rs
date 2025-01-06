@@ -28,6 +28,7 @@ fn run_on_threads(threads: i32, jobs: i32) -> i32 {
                     }
                     Value(v) => {
                         let duration = Duration::from_millis(rand::rng().random_range(10..20));
+                        #[cfg(debug_assertions)]
                         println!(
                             "Worker {} received: {} and sleeping for {:?}",
                             n, v, duration
