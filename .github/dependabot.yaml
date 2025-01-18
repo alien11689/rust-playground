@@ -36,7 +36,12 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "cargo"
-    directory: "/interop"
+    directory: "/interop/multiplier-dynamic"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "cargo"
+    directory: "/interop/multiplier-static"
     schedule:
       interval: "weekly"
 
