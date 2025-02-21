@@ -1,5 +1,5 @@
-use aoc_common::json::LeaderBoard;
 use aoc_common::AocClient;
+use aoc_common::json::LeaderBoard;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;

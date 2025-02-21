@@ -4,7 +4,7 @@
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn multiply(a: i32, b: i32) -> i32 {
     let mut res = 0;
     if b < 0 {
