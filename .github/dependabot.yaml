@@ -50,3 +50,7 @@ updates:
     schedule:
       interval: "weekly"
 
+  - package-ecosystem: "cargo"
+    directory: "/wasm-game-of-life"
+    schedule:
+      interval: "weekly"

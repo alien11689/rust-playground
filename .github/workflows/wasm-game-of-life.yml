@@ -1,0 +1,35 @@
+name: Build reading-files
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/reading-files.yml'
+      - 'reading-files/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'reading-files'
+
+env:
+  # Disable incremental compilation for faster from-scratch builds
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo install generate
+    - run: cargo install wasm-pack
+    - run: cargo fmt --check
+    - run: cargo clippy
+    # based on generated travis
+    - run: cargo generate --git . --name testing
+    - run: mv Cargo.toml Cargo.toml.tmpl
+    - run: cd testing
+    - run: wasm-pack build
+    - run: wasm-pack test --chrome --firefox --headless
