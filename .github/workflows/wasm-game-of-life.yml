@@ -27,9 +27,11 @@ jobs:
     - run: cargo install wasm-pack
     - run: cargo fmt --check
     - run: cargo clippy
-    # based on generated travis
-    - run: cargo generate --git . --name testing
-    - run: mv Cargo.toml Cargo.toml.tmpl
-    - run: cd testing
     - run: wasm-pack build
     - run: wasm-pack test --chrome --firefox --headless
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - run: cd www
+    - run: npm i
+    - run: npm run build
