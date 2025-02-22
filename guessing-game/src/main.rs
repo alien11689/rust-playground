@@ -2,7 +2,7 @@ use rand::Rng;
 use std::io;
 
 fn main() {
-    let answer = rand::thread_rng().gen_range(1..=100);
+    let answer = rand::rng().random_range(1..=100);
     println!("Guess the number in range 1..100!");
     loop {
         println!("Please input your guess.");
