@@ -2,7 +2,6 @@ mod utils;
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
-use web_sys;
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
@@ -99,10 +98,11 @@ impl Universe {
         }
 
         self.cells = next;
-        self.ticks = self.ticks + 1;
+        self.ticks += 1;
     }
 
-    pub fn new() -> Universe {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
         utils::set_panic_hook();
 
         let width = 64;
@@ -164,7 +164,7 @@ impl fmt::Display for Universe {
                 let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
                 write!(f, "{}", symbol)?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
 
         Ok(())
