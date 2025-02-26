@@ -2,6 +2,14 @@ mod utils;
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
+use web_sys;
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -16,6 +24,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: Vec<Cell>,
+    ticks: u32,
 }
 
 impl Universe {
@@ -58,6 +67,8 @@ impl Universe {
 #[wasm_bindgen]
 impl Universe {
     pub fn tick(&mut self) {
+        log!("Current time: {}", self.ticks);
+        
         let mut next = self.cells.clone();
 
         for row in 0..self.height {
@@ -88,11 +99,12 @@ impl Universe {
         }
 
         self.cells = next;
+        self.ticks = self.ticks + 1;
     }
 
     pub fn new() -> Universe {
         utils::set_panic_hook();
-        
+
         let width = 64;
         let height = 64;
 
@@ -110,6 +122,7 @@ impl Universe {
             width,
             height,
             cells,
+            ticks: 0,
         }
     }
 
