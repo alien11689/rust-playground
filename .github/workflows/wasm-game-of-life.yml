@@ -1,0 +1,36 @@
+name: Build wasm-game-of-life
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/wasm-game-of-life.yml'
+      - 'wasm-game-of-life/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'wasm-game-of-life'
+
+env:
+  # Disable incremental compilation for faster from-scratch builds
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo install cargo-generate
+    - run: cargo install wasm-pack
+    - run: cargo fmt --check
+    - run: wasm-pack test --chrome --firefox --headless
+    - run: cargo clippy
+    - run: wasm-pack build
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - run: cd www && npm i
+    - run: cd www && npm run build
