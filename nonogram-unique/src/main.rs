@@ -114,7 +114,7 @@ fn get_clues(n: u32) -> Clues {
 }
 
 fn main() {
-    let mut mem = HashMap::<Clues, u8>::new();
+    let mut mem = HashMap::<Clues, u8>::with_capacity(1<<25);
     for n in 0u32..(1 << 25) {
         *mem.entry(get_clues(n)).or_insert(0) += 1;
     }
