@@ -1,0 +1,28 @@
+name: Build nonogram-unique
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/nonogram-unique.yml'
+      - 'nonogram-unique/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'nonogram-unique'
+
+env:
+  # Disable incremental compilation for faster from-scratch builds
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo fmt --check
+    - run: cargo clippy
+    - run: cargo test
+    - run: cargo run --release
