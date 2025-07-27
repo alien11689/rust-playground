@@ -1,32 +1,41 @@
 use std::collections::HashMap;
 
 type Row = [bool; 5];
-type Clue = Vec<u8>;
-type Clues = [Clue; 10];
+
+#[derive(Hash, Eq, PartialEq, Debug)]
+struct FixSizeClue {
+    len: usize,
+    data: [u8; 5],
+}
+
+type Clues = [FixSizeClue; 10];
 
 fn get_bit(n: u32, i: u8) -> bool {
     n >> i & 1 == 1
 }
 
-fn get_clue(row: Row) -> Clue {
+fn get_clue(row: Row) -> FixSizeClue {
     let mut cur = 0u8;
     let mut last = false;
-    let mut res = vec![];
+    let mut res = [0u8; 5];
+    let mut len = 0;
     for x in row.iter() {
         if *x == last {
             cur += 1;
         } else {
             if last {
-                res.push(cur);
+                res[len] = cur;
+                len += 1;
             }
             last = *x;
             cur = 1;
         }
     }
     if last {
-        res.push(cur);
+        res[len] = cur;
+        len += 1;
     }
-    res
+    FixSizeClue { len, data: res }
 }
 
 fn get_clues(n: u32) -> Clues {
@@ -109,14 +118,17 @@ fn main() {
     for n in 0u32..(1 << 25) {
         *mem.entry(get_clues(n)).or_insert(0) += 1;
     }
-    println!("All possible nonograms: {:?}", 1<<25);
+    println!("All possible nonograms: {:?}", 1 << 25);
     println!("Possible clues set: {:?}", mem.len());
-    println!("Clues leading to single solution: {:?}", mem.values().filter(|x| **x == 1).count());
+    println!(
+        "Clues leading to single solution: {:?}",
+        mem.values().filter(|x| **x == 1).count()
+    );
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_bit, get_clue};
+    use crate::{FixSizeClue, get_bit, get_clue};
 
     #[test]
     fn test_get_bit() {
@@ -126,12 +138,37 @@ mod tests {
         assert_eq!(get_bit(2, 1), true);
     }
 
+    fn to_fix_size_clue(nums: Vec<u8>) -> FixSizeClue {
+        let mut data = [0u8; 5];
+        let mut len = 0;
+        for x in nums.iter() {
+            data[len] = *x;
+            len += 1;
+        }
+        FixSizeClue { len, data }
+    }
+
     #[test]
     fn test_get_clue() {
-        assert_eq!(get_clue([false, false, false, false, false]), []);
-        assert_eq!(get_clue([false, false, false, false, true]), [1]);
-        assert_eq!(get_clue([true, true, false, false, true]), [2, 1]);
-        assert_eq!(get_clue([true, true, false, true, true]), [2, 2]);
-        assert_eq!(get_clue([true, true, true, true, true]), [5]);
+        assert_eq!(
+            get_clue([false, false, false, false, false]),
+            to_fix_size_clue(vec![])
+        );
+        assert_eq!(
+            get_clue([false, false, false, false, true]),
+            to_fix_size_clue(vec![1])
+        );
+        assert_eq!(
+            get_clue([true, true, false, false, true]),
+            to_fix_size_clue(vec![2, 1])
+        );
+        assert_eq!(
+            get_clue([true, true, false, true, true]),
+            to_fix_size_clue(vec![2, 2])
+        );
+        assert_eq!(
+            get_clue([true, true, true, true, true]),
+            to_fix_size_clue(vec![5])
+        );
     }
 }
