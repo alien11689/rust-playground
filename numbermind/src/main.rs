@@ -9,6 +9,9 @@ struct Args {
 
     #[arg(short, long, default_value_t = 4, value_parser = clap::value_parser!(u8).range(1..=10))]
     length: u8,
+
+    #[arg(short, long, default_value_t = 10, value_parser = clap::value_parser!(u8).range(1..=30))]
+    attempts: u8,
 }
 
 fn generate_random_code(seed: u64, length: u8) -> Vec<u8> {
@@ -55,30 +58,41 @@ mod argument_parser {
             Args {
                 seed: None,
                 length: 4,
+                attempts: 10,
             }
         );
     }
 
     #[test]
     fn short_override() {
-        let args = Args::parse_from(&["name", "-s", "233213", "-l", "6"]);
+        let args = Args::parse_from(&["name", "-s", "233213", "-l", "6", "-a", "5"]);
         assert_eq!(
             args,
             Args {
                 seed: Some(233213),
                 length: 6,
+                attempts: 5,
             }
         );
     }
 
     #[test]
     fn long_override() {
-        let args = Args::parse_from(&["name", "--seed", "233213", "--length", "6"]);
+        let args = Args::parse_from(&[
+            "name",
+            "--seed",
+            "233213",
+            "--length",
+            "6",
+            "--attempts",
+            "7",
+        ]);
         assert_eq!(
             args,
             Args {
                 seed: Some(233213),
                 length: 6,
+                attempts: 7,
             }
         );
     }
@@ -104,6 +118,18 @@ mod argument_parser {
     #[test]
     fn reject_too_big_length() {
         let res = Args::try_parse_from(&["name", "-l", "11"]);
+        assert!(res.is_err())
+    }
+
+    #[test]
+    fn reject_too_small_attempts() {
+        let res = Args::try_parse_from(&["name", "-a", "0"]);
+        assert!(res.is_err())
+    }
+
+    #[test]
+    fn reject_too_big_attemts() {
+        let res = Args::try_parse_from(&["name", "-a", "31"]);
         assert!(res.is_err())
     }
 }
