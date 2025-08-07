@@ -73,124 +73,72 @@ fn main() {
 }
 
 #[cfg(test)]
-mod random_generation_test {
-    use super::*;
-
-    #[test]
-    fn test_random_number_generation() {
-        assert_eq!(
-            generate_random_code(3567657657632322323, 4),
-            vec![7, 3, 7, 8]
-        );
-        assert_eq!(generate_random_code(343243242, 6), vec![6, 1, 5, 2, 4, 0]);
-    }
-}
-
-#[cfg(test)]
-mod argument_parser {
+mod tests {
     use super::*;
     use clap::Parser;
+    use rstest::rstest;
 
-    #[test]
-    fn default_parameters() {
-        let args = Args::parse_from(&["name"]);
-        assert_eq!(
-            args,
-            Args {
-                seed: None,
-                length: 4,
-                attempts: 10,
-            }
-        );
+    #[rstest]
+    #[case(3567657657632322323, 4, vec![7, 3, 7, 8])]
+    #[case(343243242, 6, vec![6, 1, 5, 2, 4, 0])]
+    fn test_random_number_generation(
+        #[case] seed: u64,
+        #[case] length: u8,
+        #[case] expected: Vec<u8>,
+    ) {
+        assert_eq!(generate_random_code(seed, length), expected);
     }
 
-    #[test]
-    fn short_override() {
-        let args = Args::parse_from(&["name", "-s", "233213", "-l", "6", "-a", "5"]);
-        assert_eq!(
-            args,
-            Args {
-                seed: Some(233213),
-                length: 6,
-                attempts: 5,
-            }
-        );
-    }
-
-    #[test]
-    fn long_override() {
-        let args = Args::parse_from(&[
+    #[rstest]
+    #[case(vec!["name"], None, 4, 10)]
+    #[case(vec!["name", "-s", "233213", "-l", "6", "-a", "5"], Some(233213), 6, 5)]
+    #[case(vec![
             "name",
             "--seed",
             "233213",
             "--length",
             "6",
             "--attempts",
-            "7",
-        ]);
+            "5",
+        ], Some(233213), 6, 5)]
+    fn args_parsed_successfully(
+        #[case] input: Vec<&str>,
+        #[case] expected_seed: Option<u64>,
+        #[case] expected_length: u8,
+        #[case] expected_attempts: u8,
+    ) {
+        let args = Args::parse_from(input);
         assert_eq!(
             args,
             Args {
-                seed: Some(233213),
-                length: 6,
-                attempts: 7,
+                seed: expected_seed,
+                length: expected_length,
+                attempts: expected_attempts,
             }
         );
     }
 
-    #[test]
-    fn reject_negative_seed() {
-        let res = Args::try_parse_from(&["name", "--seed", "-32321321"]);
+    #[rstest]
+    #[case(vec!["name", "--seed", "-32321321"])]
+    #[case(vec!["name", "--seed", "87897987779878979898988932321321"])]
+    #[case(vec!["name", "-l", "0"])]
+    #[case(vec!["name", "-l", "11"])]
+    #[case(vec!["name", "-a", "0"])]
+    #[case(vec!["name", "-a", "31"])]
+    fn reject_invalid_args(#[case] input: Vec<&str>) {
+        let res = Args::try_parse_from(input);
         assert!(res.is_err())
     }
 
-    #[test]
-    fn reject_too_big_seed() {
-        let res = Args::try_parse_from(&["name", "--seed", "87897987779878979898988932321321"]);
-        assert!(res.is_err())
-    }
-
-    #[test]
-    fn reject_too_small_length() {
-        let res = Args::try_parse_from(&["name", "-l", "0"]);
-        assert!(res.is_err())
-    }
-
-    #[test]
-    fn reject_too_big_length() {
-        let res = Args::try_parse_from(&["name", "-l", "11"]);
-        assert!(res.is_err())
-    }
-
-    #[test]
-    fn reject_too_small_attempts() {
-        let res = Args::try_parse_from(&["name", "-a", "0"]);
-        assert!(res.is_err())
-    }
-
-    #[test]
-    fn reject_too_big_attemts() {
-        let res = Args::try_parse_from(&["name", "-a", "31"]);
-        assert!(res.is_err())
-    }
-}
-
-#[cfg(test)]
-mod code_converting {
-    use super::*;
-
-    #[test]
-    fn test_code_conversion_positive() {
-        assert_eq!(convert_to_code("1234"), Some(vec![1, 2, 3, 4]));
-        assert_eq!(convert_to_code("1"), Some(vec![1]));
-        assert_eq!(convert_to_code("4567890"), Some(vec![4, 5, 6, 7, 8, 9, 0]));
-        assert_eq!(convert_to_code(""), Some(vec![]));
-    }
-
-    #[test]
-    fn test_code_conversion_negative() {
-        assert_eq!(convert_to_code("1234a"), None);
-        assert_eq!(convert_to_code("abc"), None);
-        assert_eq!(convert_to_code("1a2,3k?>!@"), None);
+    #[rstest]
+    #[case("1234", Some(vec![1, 2, 3, 4]))]
+    #[case("1", Some(vec![1]))]
+    #[case("4567890", Some(vec![4, 5, 6, 7, 8, 9, 0]))]
+    #[case("", Some(vec![]))]
+    #[case("1234a", None)]
+    #[case("abc", None)]
+    #[case("1a2,3k?>!@", None)]
+    fn test_code_conversion(#[case] input: &str, #[case] expected: Option<Vec<u8>>) {
+        assert_eq!(convert_to_code(input), expected);
     }
 }
