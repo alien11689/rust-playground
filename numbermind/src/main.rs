@@ -37,15 +37,69 @@ fn convert_to_code(text: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
+#[derive(Debug, PartialEq)]
+struct Clue {
+    correct: u8,
+    miss_placed: u8,
+}
+
+impl Clue {
+    fn new(correct: u8, miss_placed: u8) -> Clue {
+        Clue {
+            correct,
+            miss_placed,
+        }
+    }
+}
+
+fn calculate_clue(solution: &[u8], guess: &[u8]) -> Clue {
+    let mut correct = 0;
+    let mut miss_placed = 0;
+    let mut solution_parts = vec![];
+    let mut guess_parts = vec![];
+    for i in 0..solution.len() {
+        if solution[i] == guess[i] {
+            correct += 1;
+        } else {
+            solution_parts.push(solution[i]);
+            guess_parts.push(guess[i]);
+        }
+    }
+    solution_parts.sort();
+    guess_parts.sort();
+    let mut solution_i = 0;
+    let mut guess_i = 0;
+    while solution_i < solution_parts.len() && guess_i < guess_parts.len() {
+        let cur_s = solution_parts[solution_i];
+        let cur_g = guess_parts[guess_i];
+        if cur_s == cur_g {
+            miss_placed += 1;
+            solution_i += 1;
+            guess_i += 1;
+        } else if cur_s < cur_g {
+            solution_i += 1;
+        } else {
+            guess_i += 1;
+        }
+    }
+    Clue::new(correct, miss_placed)
+}
+
+fn vec_u8_to_string(digits: Vec<u8>) -> String {
+    digits.iter().map(|d| d.to_string()).collect()
+}
+
+// todo limit number of digits
+// todo limit repetitions
+// todo add colors
+// todo calculate time spent
+// todo refactor
 fn main() {
     let args = Args::parse();
     let seed = args.seed.unwrap_or_else(|| rand::rng().next_u64());
     let length = args.length;
     let random_code = generate_random_code(seed, length);
-    println!(
-        "Seed: {}, Code length: {} - result: {:?}",
-        seed, length, random_code
-    );
+    println!("Seed: {}, Code length: {}", seed, length);
     let mut i = 1u8;
     while i <= args.attempts {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
@@ -56,6 +110,11 @@ fn main() {
                         println!("Correct!");
                         return;
                     } else {
+                        let clue = calculate_clue(&random_code, &guess);
+                        println!(
+                            "Correct: {}, miss placed: {}",
+                            clue.correct, clue.miss_placed
+                        );
                         i += 1;
                     }
                 }
@@ -69,6 +128,7 @@ fn main() {
             }
         }
     }
+    println!("Answer was: {}", vec_u8_to_string(random_code));
     println!("Good bye");
 }
 
@@ -140,5 +200,47 @@ mod tests {
     #[case("1a2,3k?>!@", None)]
     fn test_code_conversion(#[case] input: &str, #[case] expected: Option<Vec<u8>>) {
         assert_eq!(convert_to_code(input), expected);
+    }
+
+    #[rstest]
+    #[case(vec![1, 2, 3, 4], vec![1, 5, 3, 2], Clue::new(2, 1))]
+    #[case(vec![1, 2, 3, 4], vec![1, 2, 3, 4], Clue::new(4, 0))]
+    #[case(vec![1, 2, 3, 4], vec![4, 3, 2, 1], Clue::new(0, 4))]
+    #[case(vec![1, 2, 3, 4], vec![5, 6, 7, 8], Clue::new(0, 0))]
+    #[case(vec![1, 2, 3, 4], vec![1, 3, 2, 4], Clue::new(2, 2))]
+    #[case(vec![1, 1, 2, 2], vec![1, 2, 1, 2], Clue::new(2, 2))]
+    #[case(vec![1, 2, 3, 1], vec![1, 1, 2, 3], Clue::new(1, 3))]
+    #[case(vec![1, 2, 2, 3], vec![2, 2, 1, 3], Clue::new(2, 2))]
+    #[case(vec![1], vec![1], Clue::new(1, 0))]
+    #[case(vec![1], vec![2], Clue::new(0, 0))]
+    #[case(vec![1, 2], vec![2, 1], Clue::new(0, 2))]
+    #[case(vec![1, 1], vec![1, 1], Clue::new(2, 0))]
+    #[case(vec![1, 1], vec![1, 2], Clue::new(1, 0))]
+    #[case(vec![3, 4, 5], vec![3, 4, 6], Clue::new(2, 0))]
+    #[case(vec![3, 4, 5], vec![5, 3, 4], Clue::new(0, 3))]
+    #[case(vec![1, 2, 3, 4, 5], vec![1, 2, 3, 4, 5], Clue::new(5, 0))]
+    #[case(vec![1, 2, 3, 4, 5], vec![5, 4, 3, 2, 1], Clue::new(1, 4))]
+    #[case(vec![1, 1, 2, 2, 3], vec![1, 2, 1, 3, 2], Clue::new(1, 4))]
+    #[case(vec![0, 1, 2, 3, 4, 5], vec![5, 4, 3, 2, 1, 0], Clue::new(0, 6))]
+    #[case(vec![1, 2, 3, 4, 5, 6, 7], vec![1, 2, 0, 0, 5, 6, 7], Clue::new(5, 0))]
+    #[case(vec![1, 2, 3, 4, 5, 6, 7], vec![7, 6, 5, 4, 3, 2, 1], Clue::new(1, 6))]
+    #[case(vec![9,8,7,6,5,4,3,2], vec![2,3,4,5,6,7,8,9], Clue::new(0, 8))]
+    #[case(vec![1,1,1,1,1,1,1,1,1], vec![1,1,1,1,1,1,1,1,1], Clue::new(9, 0))]
+    #[case(vec![1,2,3,4,5,6,7,8,9], vec![9,8,7,6,5,4,3,2,1], Clue::new(1, 8))]
+    #[case(vec![1,2,3,4,5,6,7,8,9,0], vec![0,9,8,7,6,5,4,3,2,1], Clue::new(0, 10))]
+    fn test_calculate_clue(
+        #[case] solution: Vec<u8>,
+        #[case] guess: Vec<u8>,
+        #[case] expected: Clue,
+    ) {
+        assert_eq!(calculate_clue(&solution, &guess), expected);
+    }
+
+    #[rstest]
+    #[case(vec![1,2,3,4], "1234")]
+    #[case(vec![1], "1")]
+    #[case(vec![], "")]
+    fn test_calculate_vec_u8_to_string(#[case] input: Vec<u8>, #[case] expected: &str) {
+        assert_eq!(vec_u8_to_string(input), expected);
     }
 }
