@@ -46,19 +46,21 @@ fn main() {
         "Seed: {}, Code length: {} - result: {:?}",
         seed, length, random_code
     );
-    for i in 1..=args.attempts {
+    let mut i = 1u8;
+    while i <= args.attempts {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
         match result {
             Ok(text) => match convert_to_code(&text) {
-                None => {
-                    eprintln!("This is not the number");
-                    return;
-                }
-                Some(guess) => {
+                Some(guess) if guess.len() == length as usize => {
                     if guess == random_code {
                         println!("Correct!");
                         return;
+                    } else {
+                        i += 1;
                     }
+                }
+                _ => {
+                    println!("It's not the {} number code", length);
                 }
             },
             Err(_) => {
