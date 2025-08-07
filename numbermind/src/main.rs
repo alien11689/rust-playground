@@ -1,6 +1,7 @@
 use clap::Parser;
 use rand::rngs::StdRng;
 use rand::{Rng, RngCore, SeedableRng};
+use std::io::{self, Write};
 
 #[derive(Parser, Debug, PartialEq)]
 struct Args {
@@ -20,6 +21,15 @@ fn generate_random_code(seed: u64, length: u8) -> Vec<u8> {
     random_code
 }
 
+fn read_input(prompt: String) -> Result<String, io::Error> {
+    print!("{}", prompt);
+    io::stdout().flush()?;
+
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer)?;
+    Ok(buffer.trim().to_string())
+}
+
 fn main() {
     let args = Args::parse();
     let seed = args.seed.unwrap_or_else(|| rand::rng().next_u64());
@@ -29,6 +39,19 @@ fn main() {
         "Seed: {}, Code length: {} - result: {:?}",
         seed, length, random_code
     );
+    for i in 1..=args.attempts {
+        let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
+        match result {
+            Ok(text) => {
+                println!("You guessed: {}", text);
+            }
+            Err(_) => {
+                eprintln!("Error, good bye!");
+                return;
+            }
+        }
+    }
+    println!("Good bye");
 }
 
 #[cfg(test)]
