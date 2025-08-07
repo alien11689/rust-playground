@@ -30,6 +30,13 @@ fn read_input(prompt: String) -> Result<String, io::Error> {
     Ok(buffer.trim().to_string())
 }
 
+fn convert_to_code(text: &str) -> Option<Vec<u8>> {
+    text.trim()
+        .chars()
+        .map(|c| c.to_digit(10).map(|d| d as u8))
+        .collect()
+}
+
 fn main() {
     let args = Args::parse();
     let seed = args.seed.unwrap_or_else(|| rand::rng().next_u64());
@@ -42,9 +49,18 @@ fn main() {
     for i in 1..=args.attempts {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
         match result {
-            Ok(text) => {
-                println!("You guessed: {}", text);
-            }
+            Ok(text) => match convert_to_code(&text) {
+                None => {
+                    eprintln!("This is not the number");
+                    return;
+                }
+                Some(guess) => {
+                    if guess == random_code {
+                        println!("Correct!");
+                        return;
+                    }
+                }
+            },
             Err(_) => {
                 eprintln!("Error, good bye!");
                 return;
@@ -154,5 +170,25 @@ mod argument_parser {
     fn reject_too_big_attemts() {
         let res = Args::try_parse_from(&["name", "-a", "31"]);
         assert!(res.is_err())
+    }
+}
+
+#[cfg(test)]
+mod code_converting {
+    use super::*;
+
+    #[test]
+    fn test_code_conversion_positive() {
+        assert_eq!(convert_to_code("1234"), Some(vec![1, 2, 3, 4]));
+        assert_eq!(convert_to_code("1"), Some(vec![1]));
+        assert_eq!(convert_to_code("4567890"), Some(vec![4, 5, 6, 7, 8, 9, 0]));
+        assert_eq!(convert_to_code(""), Some(vec![]));
+    }
+
+    #[test]
+    fn test_code_conversion_negative() {
+        assert_eq!(convert_to_code("1234a"), None);
+        assert_eq!(convert_to_code("abc"), None);
+        assert_eq!(convert_to_code("1a2,3k?>!@"), None);
     }
 }
