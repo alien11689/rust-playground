@@ -5,6 +5,7 @@ use rand::seq::SliceRandom;
 use rand::{Rng, RngCore, SeedableRng};
 use std::collections::HashSet;
 use std::io::{self, Write};
+use std::time::Instant;
 
 #[derive(Parser, Debug, PartialEq)]
 struct Args {
@@ -105,7 +106,6 @@ fn vec_u8_to_string(digits: Vec<u8>) -> String {
     digits.iter().map(|d| d.to_string()).collect()
 }
 
-// todo calculate time spent
 // todo refactor
 fn main() {
     let args = Args::parse();
@@ -125,13 +125,18 @@ fn main() {
         options - 1
     );
     let mut i = 1u8;
+    let start = Instant::now();
     while i <= args.attempts {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
         match result {
             Ok(text) => match convert_to_code(&text) {
                 Some(guess) if verify_guess(&guess, length, options, unique) => {
                     if guess == random_code {
-                        println!("{}", "Correct!".green());
+                        println!(
+                            "{} Solved in {} seconds",
+                            "Correct!".green(),
+                            start.elapsed().as_secs()
+                        );
                         return;
                     } else {
                         let clue = calculate_clue(&random_code, &guess);
