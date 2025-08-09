@@ -1,0 +1,27 @@
+name: Build numbermind
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/numbermind.yml'
+      - 'numbermind/**'
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'numbermind'
+
+env:
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: rustup update
+    - run: cargo fmt --check
+    - run: cargo clippy
+    - run: cargo test
+    - run: cargo build --release
