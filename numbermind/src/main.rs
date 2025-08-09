@@ -93,7 +93,6 @@ fn vec_u8_to_string(digits: Vec<u8>) -> String {
     digits.iter().map(|d| d.to_string()).collect()
 }
 
-// todo verify that wrong digits are not used
 // todo limit repetitions
 // todo calculate time spent
 // todo refactor
@@ -114,7 +113,7 @@ fn main() {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
         match result {
             Ok(text) => match convert_to_code(&text) {
-                Some(guess) if guess.len() == length as usize => {
+                Some(guess) if verify_guess(&guess, length, options) => {
                     if guess == random_code {
                         println!("{}", "Correct!".green());
                         return;
@@ -139,6 +138,10 @@ fn main() {
         }
     }
     println!("Answer was: {}", vec_u8_to_string(random_code).blue());
+}
+
+fn verify_guess(guess: &Vec<u8>, length: u8, options: u8) -> bool {
+    guess.len() == length as usize && guess.iter().all(|c| *c < options)
 }
 
 #[cfg(test)]
@@ -260,5 +263,29 @@ mod tests {
     #[case(vec![], "")]
     fn test_calculate_vec_u8_to_string(#[case] input: Vec<u8>, #[case] expected: &str) {
         assert_eq!(vec_u8_to_string(input), expected);
+    }
+
+    #[rstest]
+    #[case(vec![1,2,3,4], 4, 5, true)]
+    #[case(vec![1,2,3], 4, 5, false)]
+    #[case(vec![1,2,3,4,5], 4, 5, false)]
+    #[case(vec![0,0,0,0], 4, 1, true)]
+    #[case(vec![0,1,2,3], 4, 4, true)]
+    #[case(vec![0,1,2,4], 4, 4, false)]
+    #[case(vec![9,9,9,9], 4, 10, true)]
+    #[case(vec![10,9,8,7], 4, 10, false)]
+    #[case(vec![], 0, 5, true)]
+    #[case(vec![], 1, 5, false)]
+    #[case(vec![4], 1, 5, true)]
+    #[case(vec![5], 1, 5, false)]
+    #[case(vec![0,2,4,6,8], 5, 9, true)]
+    #[case(vec![0,2,4,6,9], 5, 9, false)]
+    fn test_verify_guess(
+        #[case] input: Vec<u8>,
+        #[case] length: u8,
+        #[case] options: u8,
+        #[case] expected: bool,
+    ) {
+        assert_eq!(verify_guess(&input, length, options), expected);
     }
 }
