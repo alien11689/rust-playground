@@ -1,7 +1,9 @@
 use clap::Parser;
 use colored::*;
 use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
 use rand::{Rng, RngCore, SeedableRng};
+use std::collections::HashSet;
 use std::io::{self, Write};
 
 #[derive(Parser, Debug, PartialEq)]
@@ -17,12 +19,22 @@ struct Args {
 
     #[arg(short, long, default_value_t = 6, value_parser = clap::value_parser!(u8).range(1..=10))]
     options: u8,
+
+    #[arg(short, long, default_value_t = false)]
+    unique: bool,
 }
 
-fn generate_random_code(seed: u64, length: u8, options: u8) -> Vec<u8> {
+fn generate_random_code(seed: u64, length: u8, options: u8, unique: bool) -> Vec<u8> {
     let mut rng = StdRng::seed_from_u64(seed);
-    let random_code: Vec<u8> = (0..length).map(|_| rng.random_range(0..options)).collect();
-    random_code
+    if unique {
+        let mut pool: Vec<u8> = (0..options).collect();
+        pool.shuffle(&mut rng);
+        pool.truncate(length as usize);
+        pool
+    } else {
+        let random_code: Vec<u8> = (0..length).map(|_| rng.random_range(0..options)).collect();
+        random_code
+    }
 }
 
 fn read_input(prompt: String) -> Result<String, io::Error> {
@@ -93,7 +105,7 @@ fn vec_u8_to_string(digits: Vec<u8>) -> String {
     digits.iter().map(|d| d.to_string()).collect()
 }
 
-// todo limit repetitions
+// todo error codes
 // todo calculate time spent
 // todo refactor
 fn main() {
@@ -101,7 +113,12 @@ fn main() {
     let seed = args.seed.unwrap_or_else(|| rand::rng().next_u64());
     let length = args.length;
     let options = args.options;
-    let random_code = generate_random_code(seed, length, options);
+    let unique = args.unique;
+    let random_code = generate_random_code(seed, length, options, unique);
+    if !verify_guess(&random_code, length, options, unique) {
+        eprintln!("Cannot generate code matching rules");
+        return;
+    }
     println!(
         "Seed: {}, Code length: {}, digits: 0-{}",
         seed,
@@ -113,7 +130,7 @@ fn main() {
         let result = read_input(format!("Guess the number (try {}/{}): ", i, args.attempts));
         match result {
             Ok(text) => match convert_to_code(&text) {
-                Some(guess) if verify_guess(&guess, length, options) => {
+                Some(guess) if verify_guess(&guess, length, options, unique) => {
                     if guess == random_code {
                         println!("{}", "Correct!".green());
                         return;
@@ -128,7 +145,7 @@ fn main() {
                     }
                 }
                 _ => {
-                    println!("{}", format!("It's not the {} number code", length).red());
+                    println!("{}", "It's not the valid code".red());
                 }
             },
             Err(_) => {
@@ -140,8 +157,17 @@ fn main() {
     println!("Answer was: {}", vec_u8_to_string(random_code).blue());
 }
 
-fn verify_guess(guess: &Vec<u8>, length: u8, options: u8) -> bool {
-    guess.len() == length as usize && guess.iter().all(|c| *c < options)
+fn verify_guess(guess: &[u8], length: u8, options: u8, unique: bool) -> bool {
+    guess.len() == length as usize && guess.iter().all(|c| *c < options) && {
+        if !unique {
+            return true;
+        }
+        let mut seen = HashSet::new();
+        if !guess.iter().all(|&x| seen.insert(x)) {
+            return false;
+        }
+        return true;
+    }
 }
 
 #[cfg(test)]
@@ -151,22 +177,31 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(3567657657632322323, 4, vec![7, 3, 7, 8], 10)]
-    #[case(343243242, 6, vec![6, 1, 5, 2, 4, 0], 10)]
-    #[case(3567657657632322323, 4, vec![3, 1, 3, 4], 5)]
-    #[case(3567657657632322323, 6, vec![2, 1, 3, 3, 0, 1], 4)]
+    #[case(3567657657632322323, 4, false, vec![7, 3, 7, 8], 10)]
+    #[case(343243242, 6, false, vec![6, 1, 5, 2, 4, 0], 10)]
+    #[case(3567657657632322323, 4, false, vec![3, 1, 3, 4], 5)]
+    #[case(3567657657632322323, 6, false, vec![2, 1, 3, 3, 0, 1], 4)]
+    #[case(3567657657632322323, 10, false, vec![7, 3, 7, 8, 0, 3, 8, 4, 2, 7], 10)]
+    #[case(3567657657632322323, 4, true, vec![5, 6, 8, 4], 10)]
+    #[case(343243242, 6, true, vec![9, 5, 4, 7, 0, 2], 10)]
+    #[case(3567657657632322323, 4, true, vec![2, 3, 0, 4], 5)]
+    #[case(3567657657632322323, 6, true, vec![5, 3, 0, 4, 1, 2], 6)]
+    #[case(3567657657632322323, 10, true, vec![5, 6, 8, 4, 1, 2, 7, 9, 0, 3], 10)]
     fn test_random_number_generation(
         #[case] seed: u64,
         #[case] length: u8,
+        #[case] unique: bool,
         #[case] expected: Vec<u8>,
         #[case] options: u8,
     ) {
-        assert_eq!(generate_random_code(seed, length, options), expected);
+        let random_code = generate_random_code(seed, length, options, unique);
+        assert_eq!(random_code, expected);
+        assert!(verify_guess(&random_code, length, options, unique));
     }
 
     #[rstest]
-    #[case(vec!["name"], None, 4, 10, 6)]
-    #[case(vec!["name", "-s", "233213", "-l", "6", "-a", "5", "-o", "7"], Some(233213), 6, 5, 7)]
+    #[case(vec!["name"], None, 4, 10, 6, false)]
+    #[case(vec!["name", "-s", "233213", "-l", "6", "-a", "5", "-o", "7", "-u"], Some(233213), 6, 5, 7, true)]
     #[case(vec![
             "name",
             "--seed",
@@ -177,13 +212,15 @@ mod tests {
             "5",
             "--options",
             "7",
-        ], Some(233213), 6, 5, 7)]
+            "--unique",
+        ], Some(233213), 6, 5, 7, true)]
     fn args_parsed_successfully(
         #[case] input: Vec<&str>,
         #[case] expected_seed: Option<u64>,
         #[case] expected_length: u8,
         #[case] expected_attempts: u8,
         #[case] expected_options: u8,
+        #[case] expected_unique: bool,
     ) {
         let args = Args::parse_from(input);
         assert_eq!(
@@ -193,6 +230,7 @@ mod tests {
                 length: expected_length,
                 attempts: expected_attempts,
                 options: expected_options,
+                unique: expected_unique,
             }
         );
     }
@@ -266,26 +304,39 @@ mod tests {
     }
 
     #[rstest]
-    #[case(vec![1,2,3,4], 4, 5, true)]
-    #[case(vec![1,2,3], 4, 5, false)]
-    #[case(vec![1,2,3,4,5], 4, 5, false)]
-    #[case(vec![0,0,0,0], 4, 1, true)]
-    #[case(vec![0,1,2,3], 4, 4, true)]
-    #[case(vec![0,1,2,4], 4, 4, false)]
-    #[case(vec![9,9,9,9], 4, 10, true)]
-    #[case(vec![10,9,8,7], 4, 10, false)]
-    #[case(vec![], 0, 5, true)]
-    #[case(vec![], 1, 5, false)]
-    #[case(vec![4], 1, 5, true)]
-    #[case(vec![5], 1, 5, false)]
-    #[case(vec![0,2,4,6,8], 5, 9, true)]
-    #[case(vec![0,2,4,6,9], 5, 9, false)]
+    #[case(vec![1,2,3,4], 4, 5, false, true)]
+    #[case(vec![1,2,3], 4, 5, false, false)]
+    #[case(vec![1,2,3,4,5], 4, 5, false, false)]
+    #[case(vec![0,0,0,0], 4, 1, false, true)]
+    #[case(vec![0,1,2,3], 4, 4, false, true)]
+    #[case(vec![0,1,2,4], 4, 4, false, false)]
+    #[case(vec![9,9,9,9], 4, 10, false, true)]
+    #[case(vec![10,9,8,7], 4, 10, false, false)]
+    #[case(vec![], 0, 5, false, true)]
+    #[case(vec![], 1, 5, false, false)]
+    #[case(vec![4], 1, 5, false, true)]
+    #[case(vec![5], 1, 5, false, false)]
+    #[case(vec![0,2,4,6,8], 5, 9, false, true)]
+    #[case(vec![0,2,4,6,9], 5, 9, false, false)]
+    #[case(vec![1,2,3,4], 4, 5, true, true)]
+    #[case(vec![1,2,2,4], 4, 5, true, false)]
+    #[case(vec![0,0,0,0], 4, 1, true, false)]
+    #[case(vec![0,1,2,3], 4, 4, true, true)]
+    #[case(vec![0,1,2,4], 4, 4, true, false)]
+    #[case(vec![9,8,7,6], 4, 10, true, true)]
+    #[case(vec![9,9,8,7], 4, 10, true, false)]
+    #[case(vec![], 0, 5, true, true)]
+    #[case(vec![4], 1, 5, true, true)]
+    #[case(vec![4,4], 2, 5, true, false)]
+    #[case(vec![0,2,4,6,8], 5, 9, true, true)]
+    #[case(vec![0,2,4,6,0], 5, 9, true, false)]
     fn test_verify_guess(
         #[case] input: Vec<u8>,
         #[case] length: u8,
         #[case] options: u8,
+        #[case] unique: bool,
         #[case] expected: bool,
     ) {
-        assert_eq!(verify_guess(&input, length, options), expected);
+        assert_eq!(verify_guess(&input, length, options, unique), expected);
     }
 }
