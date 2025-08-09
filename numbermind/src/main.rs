@@ -105,7 +105,6 @@ fn vec_u8_to_string(digits: Vec<u8>) -> String {
     digits.iter().map(|d| d.to_string()).collect()
 }
 
-// todo error codes
 // todo calculate time spent
 // todo refactor
 fn main() {
@@ -117,7 +116,7 @@ fn main() {
     let random_code = generate_random_code(seed, length, options, unique);
     if !verify_guess(&random_code, length, options, unique) {
         eprintln!("Cannot generate code matching rules");
-        return;
+        std::process::exit(3);
     }
     println!(
         "Seed: {}, Code length: {}, digits: 0-{}",
@@ -150,7 +149,7 @@ fn main() {
             },
             Err(_) => {
                 eprintln!("{}", "Error, good bye!".red());
-                return;
+                std::process::exit(1);
             }
         }
     }
