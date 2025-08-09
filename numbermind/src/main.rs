@@ -1,4 +1,5 @@
 use clap::Parser;
+use colored::*;
 use rand::rngs::StdRng;
 use rand::{Rng, RngCore, SeedableRng};
 use std::io::{self, Write};
@@ -92,8 +93,8 @@ fn vec_u8_to_string(digits: Vec<u8>) -> String {
     digits.iter().map(|d| d.to_string()).collect()
 }
 
+// todo verify that wrong digits are not used
 // todo limit repetitions
-// todo add colors
 // todo calculate time spent
 // todo refactor
 fn main() {
@@ -115,29 +116,29 @@ fn main() {
             Ok(text) => match convert_to_code(&text) {
                 Some(guess) if guess.len() == length as usize => {
                     if guess == random_code {
-                        println!("Correct!");
+                        println!("{}", "Correct!".green());
                         return;
                     } else {
                         let clue = calculate_clue(&random_code, &guess);
                         println!(
                             "Correct: {}, miss placed: {}",
-                            clue.correct, clue.miss_placed
+                            clue.correct.to_string().green(),
+                            clue.miss_placed.to_string().yellow()
                         );
                         i += 1;
                     }
                 }
                 _ => {
-                    println!("It's not the {} number code", length);
+                    println!("{}", format!("It's not the {} number code", length).red());
                 }
             },
             Err(_) => {
-                eprintln!("Error, good bye!");
+                eprintln!("{}", "Error, good bye!".red());
                 return;
             }
         }
     }
-    println!("Answer was: {}", vec_u8_to_string(random_code));
-    println!("Good bye");
+    println!("Answer was: {}", vec_u8_to_string(random_code).blue());
 }
 
 #[cfg(test)]
