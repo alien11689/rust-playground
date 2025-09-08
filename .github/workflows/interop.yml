@@ -31,5 +31,5 @@ jobs:
       working-directory: 'interop/multiplier-static'
     - run: cargo clippy
       working-directory: 'interop/multiplier-dynamic'
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
     - run: make all
