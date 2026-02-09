@@ -4,7 +4,7 @@ mod game;
 use crate::args::Args;
 use clap::Parser;
 use colored::*;
-use rand::RngCore;
+use rand::RngExt;
 use std::io::{self, Write};
 use std::time::Instant;
 
@@ -19,7 +19,7 @@ fn read_input(prompt: String) -> Result<String, io::Error> {
 
 fn main() {
     let args = Args::parse();
-    let seed = args.seed.unwrap_or_else(|| rand::rng().next_u64());
+    let seed = args.seed.unwrap_or_else(|| rand::rng().random::<u64>());
     let length = args.length;
     let options = args.options;
     let unique = args.unique;

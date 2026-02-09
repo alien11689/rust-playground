@@ -1,5 +1,5 @@
 use rand::prelude::{SliceRandom, StdRng};
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use std::collections::HashSet;
 
 #[derive(Debug, PartialEq)]
