@@ -1,5 +1,5 @@
 use crate::WorkerMessage::{End, Value};
-use rand::Rng;
+use rand::RngExt;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
